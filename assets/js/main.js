@@ -1,8 +1,94 @@
 document.addEventListener('DOMContentLoaded', () => {
+  initHeaderScroll();
+  initActiveNavLink();
   initMobileMenu();
   initReveal();
   initSlideshow();
+  initWhatsAppButtons();
+  initWhatsAppForms();
 });
+
+function openWhatsAppChat(message = 'Olá! Gostaria de mais informações.') {
+  const whatsappNumber = '551920187600';
+  const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
+  window.open(whatsappUrl, '_blank', 'noopener');
+}
+
+function initWhatsAppButtons() {
+  document.querySelectorAll('.whatsapp-btn').forEach((button) => {
+    button.addEventListener('click', (event) => {
+      const anchor = event.currentTarget;
+      const customMessage = anchor.dataset.message || 'Olá! Gostaria de mais informações.';
+      event.preventDefault();
+      openWhatsAppChat(customMessage);
+    });
+  });
+}
+
+function initWhatsAppForms() {
+  const forms = document.querySelectorAll('form.contact-form, form#contactForm');
+
+  if (!forms.length) {
+    return;
+  }
+
+  forms.forEach((form) => {
+    form.addEventListener('submit', (event) => {
+      event.preventDefault();
+
+      const firstName = document.getElementById('firstName')?.value?.trim() || '';
+      const lastName = document.getElementById('lastName')?.value?.trim() || '';
+      const email = document.getElementById('email')?.value?.trim() || '';
+      const message = document.getElementById('message')?.value?.trim() || '';
+      const name = [firstName, lastName].filter(Boolean).join(' ') || 'Cliente';
+      const text = [
+        'Olá! Gostaria de entrar em contato.',
+        `Nome: ${name}`,
+        email ? `E-mail: ${email}` : '',
+        message ? `Mensagem: ${message}` : '',
+        '',
+        'Mensagem enviada pelo site Metal Borracha.'
+      ].filter(Boolean).join('\n');
+
+      openWhatsAppChat(text);
+      form.reset();
+    });
+  });
+}
+
+function initActiveNavLink() {
+  const currentPage = window.location.pathname.split('/').pop();
+  if (!currentPage) {
+    return;
+  }
+
+  const activeLink = document.querySelector(
+    '.main-nav a[href="produtos-hidraulicos.html"], .main-nav a[href="index.html#produtos"]'
+  );
+
+  if (currentPage === 'produtos-hidraulicos.html' && activeLink) {
+    activeLink.classList.add('active');
+  }
+}
+
+function initHeaderScroll() {
+  const body = document.body;
+  const root = document.documentElement;
+
+  if (!body || !root) {
+    return;
+  }
+
+  const updateHeaderState = () => {
+    const shouldBeScrolled = window.scrollY > 20 || root.scrollTop > 20 || body.scrollTop > 20;
+    body.classList.toggle('scrolled', shouldBeScrolled);
+    root.classList.toggle('scrolled', shouldBeScrolled);
+  };
+
+  updateHeaderState();
+  window.addEventListener('scroll', updateHeaderState, { passive: true });
+  window.addEventListener('load', updateHeaderState);
+}
 
 function initMobileMenu() {
   const burgerBtn = document.getElementById('burgerBtn');
@@ -13,7 +99,16 @@ function initMobileMenu() {
   }
 
   burgerBtn.addEventListener('click', () => {
-    mainNav.classList.toggle('open');
+    const isOpen = mainNav.classList.toggle('open');
+    burgerBtn.setAttribute('aria-expanded', String(isOpen));
+  });
+
+  document.addEventListener('click', (event) => {
+    const clickedInside = mainNav.contains(event.target) || burgerBtn.contains(event.target);
+    if (window.innerWidth <= 900 && mainNav.classList.contains('open') && !clickedInside) {
+      mainNav.classList.remove('open');
+      burgerBtn.setAttribute('aria-expanded', 'false');
+    }
   });
 
   document.querySelectorAll('.main-nav .dropdown > a').forEach((link) => {
